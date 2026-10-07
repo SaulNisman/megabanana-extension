@@ -30,7 +30,7 @@ class MegaBanana : HttpSource() {
 
     // --- POPULAR MANGA ---
     override fun popularMangaRequest(page: Int): Request {
-        return GET("$baseUrl/wp-json/megabanana/v1/catalog?pagina=$page", headers)
+        return GET("$baseUrl/wp-json/megabanana/v1/catalog?page=$page", headers)
     }
 
     override fun popularMangaParse(response: Response): MangasPage {
@@ -60,7 +60,7 @@ class MegaBanana : HttpSource() {
 
     // --- SEARCH MANGA ---
     override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
-        return GET("$baseUrl/wp-json/megabanana/v1/catalog?buscar=$query&pagina=$page", headers)
+        return GET("$baseUrl/wp-json/megabanana/v1/catalog?search=$query&page=$page", headers)
     }
 
     override fun searchMangaParse(response: Response) = popularMangaParse(response)
