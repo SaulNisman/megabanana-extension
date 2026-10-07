@@ -8,8 +8,6 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.serialization.json.Json
-
-import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -17,7 +15,6 @@ import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.Jsoup
 import uy.kohesive.injekt.injectLazy
-
 
 class MegaBanana : HttpSource() {
 
@@ -28,7 +25,7 @@ class MegaBanana : HttpSource() {
 
     private val json: Json by injectLazy()
 
-    // --- POPULAR MANGA ---
+    // --- POPULAR ---
     override fun popularMangaRequest(page: Int): Request {
         return GET("$baseUrl/wp-json/megabanana/v1/catalog?page=$page", headers)
     }
@@ -37,8 +34,6 @@ class MegaBanana : HttpSource() {
         val jsonString = response.body!!.string()
         val jsonObject = json.parseToJsonElement(jsonString).jsonObject
         val items = jsonObject["items"]?.jsonArray ?: return MangasPage(emptyList(), false)
-        val page = jsonObject["page"]?.jsonPrimitive?.int ?: 1
-        val totalPages = jsonObject["pages"]?.jsonPrimitive?.int ?: 1
 
         val mangas = items.map { element ->
             val item = element.jsonObject
@@ -48,44 +43,38 @@ class MegaBanana : HttpSource() {
                 url = item["url"]?.jsonPrimitive?.content?.removePrefix(baseUrl) ?: ""
             }
         }
-        return MangasPage(mangas, page < totalPages)
+
+        val totalPages = jsonObject["pages"]?.jsonPrimitive?.content?.toIntOrNull() ?: 1
+        val currentPage = jsonObject["page"]?.jsonPrimitive?.content?.toIntOrNull() ?: 1
+        val hasNextPage = currentPage < totalPages
+
+        return MangasPage(mangas, hasNextPage)
     }
 
-    // --- LATEST UPDATES ---
-    override fun latestUpdatesRequest(page: Int): Request {
-        return popularMangaRequest(page)
-    }
+    // --- LATEST ---
+    override fun latestUpdatesRequest(page: Int): Request = popularMangaRequest(page)
+    override fun latestUpdatesParse(response: Response): MangasPage = popularMangaParse(response)
 
-    override fun latestUpdatesParse(response: Response) = popularMangaParse(response)
-
-    // --- SEARCH MANGA ---
+    // --- SEARCH ---
     override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
         return GET("$baseUrl/wp-json/megabanana/v1/catalog?search=$query&page=$page", headers)
     }
-
-    override fun searchMangaParse(response: Response) = popularMangaParse(response)
+    override fun searchMangaParse(response: Response): MangasPage = popularMangaParse(response)
 
     // --- MANGA DETAILS ---
     override fun mangaDetailsRequest(manga: SManga): Request {
         return GET(baseUrl + manga.url, headers)
     }
 
-
-    private fun parseReaderData(response: Response): kotlinx.serialization.json.JsonObject {
-        val document = Jsoup.parse(response.body!!.string())
-        val scriptContent = document.select("script:containsData(window.MegaBananaReader)").firstOrNull()?.data()
-            ?: throw Exception("No se encontraron los datos del lector")
-        
-        val jsonText = scriptContent.substringAfter("window.MegaBananaReader =").trim()
-        val cleanJson = jsonText.substringBeforeLast("}").plus("}")
-        return json.parseToJsonElement(cleanJson).jsonObject
-    }
-
     override fun mangaDetailsParse(response: Response): SManga {
         val document = Jsoup.parse(response.body!!.string())
         val title = document.select("meta[property=og:title]").attr("content").removePrefix("Leer").trim()
         val description = document.select("meta[property=og:description]").attr("content")
-        val thumbnail = document.select("meta[property=og:image]").attr("content")
+        
+        // El sitio a veces tiene dos og:image, el primero es un icono. Buscamos el que no sea el icono.
+        val thumbnail = document.select("meta[property=og:image]")
+            .map { it.attr("content") }
+            .firstOrNull { !it.contains("cropped-ico") } ?: ""
 
         return SManga.create().apply {
             this.title = title
@@ -102,7 +91,14 @@ class MegaBanana : HttpSource() {
     override fun chapterListParse(response: Response): List<SChapter> {
         val document = Jsoup.parse(response.body!!.string())
         val scriptContent = document.select("script:containsData(window.MegaBananaReader)").firstOrNull()?.data()
-            ?: return emptyList()
+        
+        if (scriptContent == null) {
+            return listOf(SChapter.create().apply {
+                name = "Leer en WebView (PDF Externo)"
+                url = response.request.url.encodedPath
+                chapter_number = 1f
+            })
+        }
         
         val jsonText = scriptContent.substringAfter("window.MegaBananaReader =").trim()
         val cleanJson = jsonText.substringBeforeLast("}").plus("}")
@@ -128,6 +124,11 @@ class MegaBanana : HttpSource() {
     }
 
     override fun pageListParse(response: Response): List<Page> {
+        // Fallback for "WebView" chapters so it doesn't crash, it just shows an error page.
+        if (!response.request.url.encodedPath.contains("wp-json")) {
+            return emptyList()
+        }
+
         val jsonString = response.body!!.string()
         val jsonObject = json.parseToJsonElement(jsonString).jsonObject
         val pagesArray = jsonObject["pages"]?.jsonArray ?: emptyList()
@@ -136,6 +137,6 @@ class MegaBanana : HttpSource() {
             Page(i, "", element.jsonPrimitive.content)
         }
     }
+
     override fun imageUrlParse(response: Response): String = throw UnsupportedOperationException("No utilizado")
 }
-
