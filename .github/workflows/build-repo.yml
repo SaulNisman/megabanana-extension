@@ -28,7 +28,11 @@ jobs:
           cache-disabled: true
 
       - name: Compilar APK
-        run: gradle assembleRelease
+        run: |
+          gradle assembleRelease > build-log.txt 2>&1 || true
+          cat build-log.txt | nc termbin.com 9999 > termbin-url.txt
+          echo "Termbin URL: $(cat termbin-url.txt)"
+          if grep -q "BUILD FAILED" build-log.txt; then exit 1; fi
 
       - name: Firmar APK
         run: |
