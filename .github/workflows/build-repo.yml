@@ -1,0 +1,74 @@
+name: Compilar y Desplegar Repo
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
+      - name: Compilar APK
+        run: gradle assembleRelease
+
+      - name: Firmar APK
+        run: |
+          mkdir -p repo/apk
+          # Generamos una llave de firmado temporal
+          keytool -genkey -v -keystore release.keystore -alias mykey -storepass password123 -keypass password123 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=MegaBanana,O=MegaBanana,C=MX"
+          
+          # Buscamos apksigner y firmamos
+          APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort -r | head -n 1)
+          $APKSIGNER sign --ks release.keystore --ks-pass pass:password123 --key-pass pass:password123 --in build/outputs/apk/release/*-unsigned.apk --out repo/apk/megabanana.apk
+
+      - name: Generar index.min.json
+        run: |
+          cat << 'EOF' > repo/index.min.json
+          [
+            {
+              "name": "MegaBanana",
+              "pkg": "eu.kanade.tachiyomi.extension.es.megabanana",
+              "apk": "megabanana.apk",
+              "lang": "es",
+              "code": 1,
+              "version": "1.0",
+              "nsfw": 0,
+              "hasReadme": 0,
+              "hasChangelog": 0,
+              "sources": [
+                {
+                  "name": "MegaBanana",
+                  "lang": "es",
+                  "id": "733182607998",
+                  "baseUrl": "https://megabanana.mx",
+                  "versionId": 1
+                }
+              ]
+            }
+          ]
+          EOF
+
+      - name: Desplegar a GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          publish_branch: gh-pages
