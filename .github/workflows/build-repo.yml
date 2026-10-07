@@ -30,8 +30,11 @@ jobs:
       - name: Compilar APK
         run: |
           gradle assembleRelease > build-log.txt 2>&1 || true
-          cat build-log.txt | nc termbin.com 9999 > termbin-url.txt
-          echo "Termbin URL: $(cat termbin-url.txt)"
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add build-log.txt
+          git commit -m "Build log"
+          git push origin main || true
           if grep -q "BUILD FAILED" build-log.txt; then exit 1; fi
 
       - name: Firmar APK
