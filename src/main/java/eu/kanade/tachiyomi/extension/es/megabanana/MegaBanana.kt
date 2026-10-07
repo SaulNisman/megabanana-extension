@@ -8,7 +8,7 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.boolean
+
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -17,8 +17,7 @@ import okhttp.Request
 import okhttp.Response
 import org.jsoup.Jsoup
 import uy.kohesive.injekt.injectLazy
-import java.text.SimpleDateFormat
-import java.util.Locale
+
 
 class MegaBanana : HttpSource() {
 
@@ -35,7 +34,7 @@ class MegaBanana : HttpSource() {
     }
 
     override fun popularMangaParse(response: Response): MangasPage {
-        val jsonString = response.body.string()
+        val jsonString = response.body!!.string()
         val jsonObject = json.parseToJsonElement(jsonString).jsonObject
         val items = jsonObject["items"]?.jsonArray ?: return MangasPage(emptyList(), false)
         val page = jsonObject["page"]?.jsonPrimitive?.int ?: 1
@@ -72,7 +71,7 @@ class MegaBanana : HttpSource() {
     }
 
     private fun parseReaderData(response: Response): kotlinx.serialization.json.JsonObject {
-        val document = Jsoup.parse(response.body.string())
+        val document = Jsoup.parse(response.body!!.string())
         val scriptContent = document.select("script#megabanana-reader-data").firstOrNull()?.data()
             ?: throw Exception("No se encontraron los datos del lector en la página")
         return json.parseToJsonElement(scriptContent).jsonObject
