@@ -73,11 +73,12 @@ class MegaBanana : HttpSource() {
     private fun parseReaderData(response: Response): kotlinx.serialization.json.JsonObject {
         val document = Jsoup.parse(response.body!!.string())
         val scriptContent = document.select("script#megabanana-reader-js-before").firstOrNull()?.data()
-            ?: throw Exception("No se encontraron los datos del lector en la p√°gina")
+            ?: throw Exception("No se encontraron los datos del lector en la p·gina")
         
         // El script tiene este formato: var nombre = { ... };
-        val jsonText = scriptContent.substringAfter("=").trim().removeSuffix(";")
-        return json.parseToJsonElement(jsonText).jsonObject
+        val jsonText = scriptContent.substringAfter("=").trim()
+        val cleanJson = jsonText.substringBeforeLast("}").plus("}")
+        return json.parseToJsonElement(cleanJson).jsonObject
     }
 
     override fun mangaDetailsParse(response: Response): SManga {
@@ -133,3 +134,4 @@ class MegaBanana : HttpSource() {
 
     override fun imageUrlParse(response: Response): String = throw UnsupportedOperationException("No utilizado")
 }
+
