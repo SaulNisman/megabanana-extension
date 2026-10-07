@@ -39,14 +39,15 @@ jobs:
           APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort -r | head -n 1)
           $APKSIGNER sign --ks release.keystore --ks-pass pass:password123 --key-pass pass:password123 --in build/outputs/apk/release/*-unsigned.apk --out repo/apk/megabanana.apk
 
-      - name: Generar index.min.json
+      - name: Generar repo.json e index.min.json
         run: |
+          # Generar index.min.json (Para Mihon)
           cat << 'EOF' > repo/index.min.json
           [
             {
               "name": "MegaBanana",
               "pkg": "eu.kanade.tachiyomi.extension.es.megabanana",
-              "apk": "apk/megabanana.apk",
+              "apk": "megabanana.apk",
               "lang": "es",
               "code": 1,
               "version": "1.0",
@@ -64,6 +65,34 @@ jobs:
               ]
             }
           ]
+          EOF
+          
+          # Generar repo.json (Para Suwayomi)
+          cat << 'EOF' > repo/repo.json
+          {
+            "meta": {
+              "name": "MegaBanana Repo"
+            },
+            "plugin": [
+              {
+                "name": "MegaBanana",
+                "pkg": "eu.kanade.tachiyomi.extension.es.megabanana",
+                "apk": "megabanana.apk",
+                "lang": "es",
+                "code": 1,
+                "version": "1.0",
+                "nsfw": 0,
+                "sources": [
+                  {
+                    "name": "MegaBanana",
+                    "lang": "es",
+                    "id": "733182607998",
+                    "baseUrl": "https://megabanana.mx"
+                  }
+                ]
+              }
+            ]
+          }
           EOF
 
       - name: Desplegar a GitHub Pages
