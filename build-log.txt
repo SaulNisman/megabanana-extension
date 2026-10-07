@@ -33,8 +33,8 @@ Installing Android SDK Build-Tools 30.0.3 in /usr/local/lib/android/sdk/build-to
 > Task :compileReleaseAidl NO-SOURCE
 > Task :compileReleaseRenderscript NO-SOURCE
 > Task :generateReleaseBuildConfig
-> Task :checkReleaseAarMetadata
 > Task :generateReleaseResValues
+> Task :checkReleaseAarMetadata
 > Task :mapReleaseSourceSetPaths
 > Task :generateReleaseResources
 > Task :createReleaseCompatibleScreenManifests
@@ -55,33 +55,33 @@ This migration can be done automatically using the AGP Upgrade Assistant, please
 > Task :stripReleaseDebugSymbols NO-SOURCE
 > Task :extractReleaseNativeSymbolTables NO-SOURCE
 > Task :mergeReleaseNativeDebugMetadata NO-SOURCE
-> Task :processReleaseManifestForPackage
 > Task :checkReleaseDuplicateClasses
-> Task :processReleaseResources
 > Task :desugarReleaseFileDependencies
+> Task :mergeReleaseShaders
+> Task :processReleaseManifestForPackage
+> Task :mergeExtDexRelease
+> Task :compileReleaseShaders NO-SOURCE
+> Task :generateReleaseAssets UP-TO-DATE
+> Task :mergeReleaseAssets
+> Task :compressReleaseAssets
+> Task :mergeReleaseArtProfile
+> Task :processReleaseJavaRes NO-SOURCE
+> Task :collectReleaseDependencies
+> Task :sdkReleaseDependencyData
+> Task :writeReleaseAppMetadata
+> Task :writeReleaseSigningConfigVersions
+> Task :processReleaseResources
+> Task :optimizeReleaseResources
 
 > Task :compileReleaseKotlin
 w: file:///home/runner/work/megabanana-extension/megabanana-extension/src/main/java/eu/kanade/tachiyomi/extension/es/megabanana/MegaBanana.kt:37:39 Unnecessary non-null assertion (!!) on a non-null receiver of type ResponseBody
 w: file:///home/runner/work/megabanana-extension/megabanana-extension/src/main/java/eu/kanade/tachiyomi/extension/es/megabanana/MegaBanana.kt:74:49 Unnecessary non-null assertion (!!) on a non-null receiver of type ResponseBody
 
-> Task :mergeExtDexRelease
 > Task :compileReleaseJavaWithJavac
 > Task :dexBuilderRelease
-> Task :mergeReleaseShaders
-> Task :compileReleaseShaders NO-SOURCE
-> Task :generateReleaseAssets UP-TO-DATE
-> Task :mergeReleaseArtProfile
-> Task :mergeReleaseAssets
-> Task :compressReleaseAssets
-> Task :processReleaseJavaRes NO-SOURCE
 > Task :mergeReleaseJavaResource
-> Task :collectReleaseDependencies
 > Task :mergeDexRelease
-> Task :sdkReleaseDependencyData
 > Task :compileReleaseArtProfile
-> Task :writeReleaseAppMetadata
-> Task :writeReleaseSigningConfigVersions
-> Task :optimizeReleaseResources
 > Task :packageRelease
 > Task :createReleaseApkListingFileRedirect
 
@@ -92,23 +92,25 @@ e: /home/runner/.gradle/caches/modules-2/files-2.1/com.squareup.okio/okio-jvm/3.
 > Task :lintVitalReportRelease
 > Task :lintVitalRelease
 > Task :assembleRelease
-Daemon will be stopped at the end of the build after running out of JVM memory
 
-FAILURE: Build failed with an exception.
+FAILURE: Build completed with 1 failures.
 
+1: Task failed with an exception.
+-----------
 * What went wrong:
-Failed to notify build listener.
-> Metaspace
+Metaspace
 
 * Try:
 > Run with --stacktrace option to get the stack trace.
 > Run with --info or --debug option to get more log output.
 > Run with --scan to get full insights.
+==============================================================================
 
 * Get more help at https://help.gradle.org
 
-BUILD FAILED in 1m 32s
+BUILD FAILED in 1m 41s
 38 actionable tasks: 38 executed
+Daemon will be stopped at the end of the build after running out of JVM memory
 
 FAILURE: Build failed with an exception.
 
@@ -123,4 +125,4 @@ Self-suppression not permitted
 
 * Get more help at https://help.gradle.org
 
-BUILD FAILED in 1m 33s
+BUILD FAILED in 1m 43s
