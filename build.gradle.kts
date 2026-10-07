@@ -26,7 +26,7 @@ android {
 
 dependencies {
     // API base de Tachiyomi/Mihon
-    compileOnly("com.github.keiyoushi:extensions-lib:1.4")
+    compileOnly("com.github.tachiyomiorg:extensions-lib:1.4.4")
     // Jsoup y OkHttp son proveidos por la app, por eso son compileOnly
     compileOnly("org.jsoup:jsoup:1.17.2")
     compileOnly("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
