@@ -43,15 +43,18 @@ jobs:
       - name: Generar repo.json e index.min.json
         run: |
           # Generar index.min.json (Para Mihon)
-          cat << 'EOF' > repo/index.min.json
+          VERSION_CODE=$(grep -oP 'versionCode = \K\d+' build.gradle.kts)
+          VERSION_NAME=$(grep -oP 'versionName = "\K[^"]+' build.gradle.kts)
+
+          cat << EOF > repo/index.min.json
           [
             {
               "name": "MegaBanana",
               "pkg": "eu.kanade.tachiyomi.extension.es.megabanana",
               "apk": "megabanana.apk",
               "lang": "es",
-              "code": 1,
-              "version": "1.4.1",
+              "code": $VERSION_CODE,
+              "version": "$VERSION_NAME",
               "nsfw": 0,
               "hasReadme": 0,
               "hasChangelog": 0,
@@ -69,7 +72,7 @@ jobs:
           EOF
           
           # Generar repo.json (Para Suwayomi)
-          cat << 'EOF' > repo/repo.json
+          cat << EOF > repo/repo.json
           {
             "meta": {
               "name": "MegaBanana Repo",
@@ -82,8 +85,8 @@ jobs:
                 "pkg": "eu.kanade.tachiyomi.extension.es.megabanana",
                 "apk": "megabanana.apk",
                 "lang": "es",
-                "code": 1,
-                "version": "1.4.1",
+                "code": $VERSION_CODE,
+                "version": "$VERSION_NAME",
                 "nsfw": 0,
                 "sources": [
                   {
