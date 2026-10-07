@@ -112,13 +112,14 @@ class MegaBanana : HttpSource() {
 
     // --- PAGES ---
     override fun pageListRequest(chapter: SChapter): Request {
-        return GET(baseUrl + chapter.url, headers)
+        val chapterId = chapter.url.substringAfterLast("#", "")
+        return GET(baseUrl + chapter.url.substringBeforeLast("#"), headers.newBuilder().add("Chapter-Id", chapterId).build())
     }
 
     override fun pageListParse(response: Response): List<Page> {
         val data = parseReaderData(response)
         val chaptersArray = data["chapters"]?.jsonArray ?: return emptyList()
-        val chapterId = response.request.url.fragment
+        val chapterId = response.request.header("Chapter-Id")?.takeIf { it.isNotEmpty() } ?: response.request.url.fragment
 
         val chapterObj = chaptersArray.firstOrNull { it.jsonObject["id"]?.jsonPrimitive?.content == chapterId }?.jsonObject
             ?: throw Exception("Capítulo no encontrado")
