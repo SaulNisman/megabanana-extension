@@ -72,9 +72,12 @@ class MegaBanana : HttpSource() {
 
     private fun parseReaderData(response: Response): kotlinx.serialization.json.JsonObject {
         val document = Jsoup.parse(response.body!!.string())
-        val scriptContent = document.select("script#megabanana-reader-data").firstOrNull()?.data()
+        val scriptContent = document.select("script#megabanana-reader-js-before").firstOrNull()?.data()
             ?: throw Exception("No se encontraron los datos del lector en la página")
-        return json.parseToJsonElement(scriptContent).jsonObject
+        
+        // El script tiene este formato: var nombre = { ... };
+        val jsonText = scriptContent.substringAfter("=").trim().removeSuffix(";")
+        return json.parseToJsonElement(jsonText).jsonObject
     }
 
     override fun mangaDetailsParse(response: Response): SManga {
