@@ -70,27 +70,29 @@ class MegaBanana : HttpSource() {
         return GET(baseUrl + manga.url, headers)
     }
 
+
     private fun parseReaderData(response: Response): kotlinx.serialization.json.JsonObject {
         val document = Jsoup.parse(response.body!!.string())
-        val scriptContent = document.select("script#megabanana-reader-js-before").firstOrNull()?.data()
-            ?: throw Exception("No se encontraron los datos del lector en la p�gina")
+        val scriptContent = document.select("script:containsData(window.MegaBananaReader)").firstOrNull()?.data()
+            ?: throw Exception("No se encontraron los datos del lector")
         
-        // El script tiene este formato: var nombre = { ... };
-        val jsonText = scriptContent.substringAfter("=").trim()
+        val jsonText = scriptContent.substringAfter("window.MegaBananaReader =").trim()
         val cleanJson = jsonText.substringBeforeLast("}").plus("}")
         return json.parseToJsonElement(cleanJson).jsonObject
     }
 
     override fun mangaDetailsParse(response: Response): SManga {
-        val data = parseReaderData(response)
-        val comic = data["comic"]?.jsonObject ?: throw Exception("Datos del comic no encontrados")
+        val document = Jsoup.parse(response.body!!.string())
+        val title = document.select("meta[property=og:title]").attr("content").removePrefix("Leer").trim()
+        val description = document.select("meta[property=og:description]").attr("content")
+        val thumbnail = document.select("meta[property=og:image]").attr("content")
 
         return SManga.create().apply {
-            title = comic["title"]?.jsonPrimitive?.content ?: ""
-            thumbnail_url = comic["thumbnail"]?.jsonPrimitive?.content ?: ""
-            description = comic["excerpt"]?.jsonPrimitive?.content ?: ""
-            status = SManga.UNKNOWN
-            initialized = true
+            this.title = title
+            this.description = description
+            this.thumbnail_url = thumbnail
+            this.status = SManga.UNKNOWN
+            this.initialized = true
         }
     }
 
@@ -98,14 +100,23 @@ class MegaBanana : HttpSource() {
     override fun chapterListRequest(manga: SManga): Request = mangaDetailsRequest(manga)
 
     override fun chapterListParse(response: Response): List<SChapter> {
-        val data = parseReaderData(response)
-        val chaptersArray = data["chapters"]?.jsonArray ?: return emptyList()
+        val document = Jsoup.parse(response.body!!.string())
+        val scriptContent = document.select("script:containsData(window.MegaBananaReader)").firstOrNull()?.data()
+            ?: return emptyList()
+        
+        val jsonText = scriptContent.substringAfter("window.MegaBananaReader =").trim()
+        val cleanJson = jsonText.substringBeforeLast("}").plus("}")
+        val rootObj = json.parseToJsonElement(cleanJson).jsonObject
+        val dataObj = rootObj["data"]?.jsonObject ?: return emptyList()
+        
+        val postId = rootObj["postId"]?.jsonPrimitive?.content ?: dataObj["postId"]?.jsonPrimitive?.content ?: return emptyList()
+        val chaptersArray = dataObj["chapters"]?.jsonArray ?: return emptyList()
 
         return chaptersArray.mapIndexed { index, element ->
             val chap = element.jsonObject
             SChapter.create().apply {
                 name = chap["title"]?.jsonPrimitive?.content ?: "Capítulo ${index + 1}"
-                url = response.request.url.encodedPath + "#" + chap["id"]?.jsonPrimitive?.content
+                url = "/wp-json/megabanana/v1/reader/$postId?chapter=" + chap["number"]?.jsonPrimitive?.content
                 chapter_number = (chaptersArray.size - index).toFloat()
             }
         }
@@ -113,25 +124,18 @@ class MegaBanana : HttpSource() {
 
     // --- PAGES ---
     override fun pageListRequest(chapter: SChapter): Request {
-        val chapterId = chapter.url.substringAfterLast("#", "")
-        return GET(baseUrl + chapter.url.substringBeforeLast("#"), headers.newBuilder().add("Chapter-Id", chapterId).build())
+        return GET(baseUrl + chapter.url, headers)
     }
 
     override fun pageListParse(response: Response): List<Page> {
-        val data = parseReaderData(response)
-        val chaptersArray = data["chapters"]?.jsonArray ?: return emptyList()
-        val chapterId = response.request.header("Chapter-Id")?.takeIf { it.isNotEmpty() } ?: response.request.url.fragment
+        val jsonString = response.body!!.string()
+        val jsonObject = json.parseToJsonElement(jsonString).jsonObject
+        val pagesArray = jsonObject["pages"]?.jsonArray ?: emptyList()
 
-        val chapterObj = chaptersArray.firstOrNull { it.jsonObject["id"]?.jsonPrimitive?.content == chapterId }?.jsonObject
-            ?: throw Exception("Capítulo no encontrado")
-
-        val images = chapterObj["images"]?.jsonArray ?: return emptyList()
-
-        return images.mapIndexed { i, element ->
+        return pagesArray.mapIndexed { i, element ->
             Page(i, "", element.jsonPrimitive.content)
         }
     }
-
     override fun imageUrlParse(response: Response): String = throw UnsupportedOperationException("No utilizado")
 }
 
