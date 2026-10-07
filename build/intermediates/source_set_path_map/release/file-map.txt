@@ -1,8 +1,0 @@
-eu.kanade.tachiyomi.extension.es.megabanana-pngs-0 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\build\generated\res\pngs\release
-eu.kanade.tachiyomi.extension.es.megabanana-resValues-1 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\build\generated\res\resValues\release
-eu.kanade.tachiyomi.extension.es.megabanana-rs-2 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\build\generated\res\rs\release
-eu.kanade.tachiyomi.extension.es.megabanana-mergeReleaseResources-3 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\build\intermediates\incremental\release\mergeReleaseResources\merged.dir
-eu.kanade.tachiyomi.extension.es.megabanana-mergeReleaseResources-4 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\build\intermediates\incremental\release\mergeReleaseResources\stripped.dir
-eu.kanade.tachiyomi.extension.es.megabanana-merged_res-5 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\build\intermediates\merged_res\release
-eu.kanade.tachiyomi.extension.es.megabanana-main-6 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\res
-eu.kanade.tachiyomi.extension.es.megabanana-release-7 C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\release\res
