@@ -13,8 +13,8 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import okhttp.Request
-import okhttp.Response
+import okhttp3.Request
+import okhttp3.Response
 import org.jsoup.Jsoup
 import uy.kohesive.injekt.injectLazy
 

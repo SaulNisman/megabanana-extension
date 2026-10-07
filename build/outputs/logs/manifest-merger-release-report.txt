@@ -1,0 +1,53 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+	package
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:3:11-64
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+	android:versionName
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+	android:versionCode
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:1-12:12
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:2:11-69
+uses-feature#tachiyomi.extension
+ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:4:5-56
+	android:name
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:4:19-53
+application
+ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:5:5-11:19
+	android:label
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:7:9-46
+	android:hasCode
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:6:9-31
+meta-data#tachiyomi.extension.class
+ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:8:9-10:86
+	android:value
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:10:13-83
+	android:name
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml:9:13-53
+uses-sdk
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		ADDED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\Tiago\.gemini\antigravity\scratch\megabanana-repo\src\main\AndroidManifest.xml
