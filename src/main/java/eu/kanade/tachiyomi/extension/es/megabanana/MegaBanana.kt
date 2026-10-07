@@ -2,146 +2,132 @@ package eu.kanade.tachiyomi.extension.es.megabanana
 
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.source.model.FilterList
+import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
-import eu.kanade.tachiyomi.source.online.ParsedHttpSource
-import okhttp3.Request
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
+import eu.kanade.tachiyomi.source.online.HttpSource
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import okhttp.Request
+import okhttp.Response
+import org.jsoup.Jsoup
+import uy.kohesive.injekt.injectLazy
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class MegaBanana : ParsedHttpSource() {
+class MegaBanana : HttpSource() {
 
-    // --- CONFIGURACIÓN BASE ---
     override val name = "MegaBanana"
-    
-    // Asumimos el host principal como base url. 
     override val baseUrl = "https://megabanana.mx"
-    
     override val lang = "es"
-    
     override val supportsLatest = true
 
-    override fun headersBuilder() = super.headersBuilder()
-        .add("Referer", "$baseUrl/")
+    private val json: Json by injectLazy()
 
-    // --- CATÁLOGO POPULAR / PRINCIPAL ---
+    // --- POPULAR MANGA ---
     override fun popularMangaRequest(page: Int): Request {
-        return GET("$baseUrl/comics/page/$page/", headers)
+        return GET("$baseUrl/wp-json/megabanana/v1/catalog?pagina=$page", headers)
     }
 
-    override fun popularMangaSelector() = "div.page-item-detail, div.post-item, div.manga-item"
+    override fun popularMangaParse(response: Response): MangasPage {
+        val jsonString = response.body.string()
+        val jsonObject = json.parseToJsonElement(jsonString).jsonObject
+        val items = jsonObject["items"]?.jsonArray ?: return MangasPage(emptyList(), false)
+        val page = jsonObject["page"]?.jsonPrimitive?.int ?: 1
+        val totalPages = jsonObject["pages"]?.jsonPrimitive?.int ?: 1
 
-    override fun popularMangaNextPageSelector() = "div.nav-previous > a, a.next.page-numbers"
-
-    override fun popularMangaFromElement(element: Element): SManga {
-        return SManga.create().apply {
-            element.select("h3 a, a.post-title, h4 a").first()?.let {
-                title = it.text().trim()
-                setUrlWithoutDomain(it.attr("abs:href"))
-            }
-            element.select("img").first()?.let { img ->
-                thumbnail_url = img.attr("abs:data-src").ifEmpty { img.attr("abs:src") }
+        val mangas = items.map { element ->
+            val item = element.jsonObject
+            SManga.create().apply {
+                title = item["title"]?.jsonPrimitive?.content ?: ""
+                thumbnail_url = item["thumbnail"]?.jsonPrimitive?.content ?: ""
+                url = item["url"]?.jsonPrimitive?.content?.removePrefix(baseUrl) ?: ""
             }
         }
+        return MangasPage(mangas, page < totalPages)
     }
 
-    // --- ÚLTIMAS ACTUALIZACIONES ---
+    // --- LATEST UPDATES ---
     override fun latestUpdatesRequest(page: Int): Request {
-        return GET("$baseUrl/latest/page/$page/", headers)
+        return popularMangaRequest(page)
     }
 
-    override fun latestUpdatesSelector() = popularMangaSelector()
+    override fun latestUpdatesParse(response: Response) = popularMangaParse(response)
 
-    override fun latestUpdatesNextPageSelector() = popularMangaNextPageSelector()
-
-    override fun latestUpdatesFromElement(element: Element): SManga = popularMangaFromElement(element)
-
-    // --- BÚSQUEDA DE CÓMICS ---
+    // --- SEARCH MANGA ---
     override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
-        return GET("$baseUrl/page/$page/?s=$query&post_type=wp-manga", headers)
+        return GET("$baseUrl/wp-json/megabanana/v1/catalog?buscar=$query&pagina=$page", headers)
     }
 
-    override fun searchMangaSelector() = "div.c-tabs-item__content, div.post-item, div.search-wrap"
+    override fun searchMangaParse(response: Response) = popularMangaParse(response)
 
-    override fun searchMangaNextPageSelector() = popularMangaNextPageSelector()
+    // --- MANGA DETAILS ---
+    override fun mangaDetailsRequest(manga: SManga): Request {
+        return GET(baseUrl + manga.url, headers)
+    }
 
-    override fun searchMangaFromElement(element: Element): SManga {
+    private fun parseReaderData(response: Response): kotlinx.serialization.json.JsonObject {
+        val document = Jsoup.parse(response.body.string())
+        val scriptContent = document.select("script#megabanana-reader-data").firstOrNull()?.data()
+            ?: throw Exception("No se encontraron los datos del lector en la página")
+        return json.parseToJsonElement(scriptContent).jsonObject
+    }
+
+    override fun mangaDetailsParse(response: Response): SManga {
+        val data = parseReaderData(response)
+        val comic = data["comic"]?.jsonObject ?: throw Exception("Datos del comic no encontrados")
+
         return SManga.create().apply {
-            element.select("h3 a, h4 a, a.post-title").first()?.let {
-                title = it.text().trim()
-                setUrlWithoutDomain(it.attr("abs:href"))
-            }
-            element.select("img").first()?.let { img ->
-                thumbnail_url = img.attr("abs:data-src").ifEmpty { img.attr("abs:src") }
+            title = comic["title"]?.jsonPrimitive?.content ?: ""
+            thumbnail_url = comic["thumbnail"]?.jsonPrimitive?.content ?: ""
+            description = comic["excerpt"]?.jsonPrimitive?.content ?: ""
+            status = SManga.UNKNOWN
+            initialized = true
+        }
+    }
+
+    // --- CHAPTERS ---
+    override fun chapterListRequest(manga: SManga): Request = mangaDetailsRequest(manga)
+
+    override fun chapterListParse(response: Response): List<SChapter> {
+        val data = parseReaderData(response)
+        val chaptersArray = data["chapters"]?.jsonArray ?: return emptyList()
+
+        return chaptersArray.mapIndexed { index, element ->
+            val chap = element.jsonObject
+            SChapter.create().apply {
+                name = chap["title"]?.jsonPrimitive?.content ?: "Capítulo ${index + 1}"
+                url = response.request.url.encodedPath + "#" + chap["id"]?.jsonPrimitive?.content
+                chapter_number = (chaptersArray.size - index).toFloat()
             }
         }
     }
 
-    // --- DETALLES DEL CÓMIC ---
-    override fun mangaDetailsParse(document: Document): SManga {
-        return SManga.create().apply {
-            title = document.select("div.post-title h1, h1.entry-title").text().trim()
-            author = document.select("div.author-content a, div.manga-authors a").joinToString { it.text() }
-            genre = document.select("div.genres-content a, div.tags a, div.manga-genres a").joinToString { it.text() }
-            description = document.select("div.summary__content, div.entry-content, div.manga-excerpt").text().trim()
-            
-            thumbnail_url = document.select("div.summary_image img, div.thumb img").first()?.let { img ->
-                img.attr("abs:data-src").ifEmpty { img.attr("abs:src") }
-            }
+    // --- PAGES ---
+    override fun pageListRequest(chapter: SChapter): Request {
+        val mangaUrl = chapter.url.substringBefore("#")
+        return GET(baseUrl + mangaUrl, headers)
+    }
 
-            val statusText = document.select("div.post-status div.summary-content, div.status").text().lowercase(Locale.getDefault())
-            status = when {
-                statusText.contains("ongoing") || statusText.contains("en emisión") -> SManga.ONGOING
-                statusText.contains("completed") || statusText.contains("finalizado") -> SManga.COMPLETED
-                else -> SManga.UNKNOWN
-            }
+    override fun pageListParse(response: Response): List<Page> {
+        val data = parseReaderData(response)
+        val chaptersArray = data["chapters"]?.jsonArray ?: return emptyList()
+        val chapterId = response.request.url.fragment
+
+        val chapterObj = chaptersArray.firstOrNull { it.jsonObject["id"]?.jsonPrimitive?.content == chapterId }?.jsonObject
+            ?: throw Exception("Capítulo no encontrado")
+
+        val images = chapterObj["images"]?.jsonArray ?: return emptyList()
+
+        return images.mapIndexed { i, element ->
+            Page(i, "", element.jsonPrimitive.content)
         }
     }
 
-    // --- LISTA DE CAPÍTULOS ---
-    override fun chapterListSelector() = "li.wp-manga-chapter, div.chapter-list li, ul.main.version-chap li"
-
-    override fun chapterFromElement(element: Element): SChapter {
-        return SChapter.create().apply {
-            element.select("a").first()?.let {
-                name = it.text().trim()
-                setUrlWithoutDomain(it.attr("abs:href"))
-            }
-            element.select("span.chapter-release-date i, span.time").first()?.text()?.let {
-                date_upload = parseChapterDate(it)
-            }
-        }
-    }
-
-    private fun parseChapterDate(dateStr: String): Long {
-        return try {
-            val format = SimpleDateFormat("dd/MM/yyyy", Locale("es"))
-            format.parse(dateStr)?.time ?: 0L
-        } catch (e: Exception) {
-            0L
-        }
-    }
-
-    // --- LECTOR DE PÁGINAS ---
-    override fun pageListParse(document: Document): List<Page> {
-        val pages = mutableListOf<Page>()
-        val imageElements = document.select("div.reading-content img, div.page-break img, div#all img")
-        
-        imageElements.forEachIndexed { i, element ->
-            var url = element.attr("abs:data-src").trim()
-            if (url.isEmpty()) url = element.attr("abs:data-lazy-src").trim()
-            if (url.isEmpty()) url = element.attr("abs:data-cfsrc").trim()
-            if (url.isEmpty()) url = element.attr("abs:src").trim()
-            
-            if (url.isNotEmpty()) {
-                pages.add(Page(i, "", url))
-            }
-        }
-        return pages
-    }
-
-    override fun imageUrlParse(document: Document): String = throw UnsupportedOperationException("No se utiliza para ParsedHttpSource")
+    override fun imageUrlParse(response: Response): String = throw UnsupportedOperationException("No utilizado")
 }

@@ -30,4 +30,6 @@ dependencies {
     // Jsoup y OkHttp son proveidos por la app, por eso son compileOnly
     compileOnly("org.jsoup:jsoup:1.17.2")
     compileOnly("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    compileOnly("uy.kohesive.injekt:injekt-core:1.16.1")
 }
