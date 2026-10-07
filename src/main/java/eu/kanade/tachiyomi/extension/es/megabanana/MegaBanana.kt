@@ -110,8 +110,7 @@ class MegaBanana : HttpSource() {
 
     // --- PAGES ---
     override fun pageListRequest(chapter: SChapter): Request {
-        val mangaUrl = chapter.url.substringBefore("#")
-        return GET(baseUrl + mangaUrl, headers)
+        return GET(baseUrl + chapter.url, headers)
     }
 
     override fun pageListParse(response: Response): List<Page> {
